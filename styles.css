@@ -123,17 +123,20 @@ h1 {
     display: flex;
     gap: 10px;
     margin-bottom: 2rem;
+    position: relative;
+    width: 100%;
 }
 
 input[type="text"] {
     flex: 1;
-    padding: 12px;
+    padding: 12px 15px;
     border: 2px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 25px;
     font-size: 1rem;
     transition: border-color 0.3s;
     background: var(--container-bg);
     color: var(--text-color);
+    min-width: 0;
 }
 
 input[type="text"]:focus {
@@ -145,13 +148,20 @@ input[type="text"]:focus {
     background: linear-gradient(145deg, #6b47b8, #4a2fbd);
     color: white;
     border: none;
-    padding: 15px 25px;
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
     border-radius: 50%;
     cursor: pointer;
     font-size: 1.5rem;
     font-weight: bold;
     box-shadow: 0 4px 15px rgba(74, 47, 189, 0.3);
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-left: 10px;
 }
 
 #addTask:hover {
@@ -259,6 +269,74 @@ input[type="text"]:focus {
 
 .edit-btn:hover {
     background: #ff8c00;
+}
+
+/* Responsive styles */
+@media (max-width: 480px) {
+    .container {
+        padding: 1rem;
+        max-width: 100%;
+    }
+
+    .todo-input {
+        gap: 8px;
+    }
+
+    #addTask {
+        width: 45px;
+        height: 45px;
+        min-width: 45px;
+        font-size: 1.2rem;
+    }
+
+    input[type="text"] {
+        padding: 10px 15px;
+        font-size: 0.95rem;
+    }
+
+    .todo-list li {
+        padding: 12px;
+    }
+
+    .task-content {
+        font-size: 0.95rem;
+    }
+
+    .task-time {
+        font-size: 0.75rem;
+    }
+
+    .actions {
+        gap: 6px;
+    }
+
+    .edit-btn,
+    .delete-btn {
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+    }
+
+    .progress-stats {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .task-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    body {
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
 }
 
 .actions {
