@@ -1,3 +1,50 @@
+// Código de instalación PWA
+let deferredPrompt;
+const installButton = document.getElementById('installButton');
+
+// Ocultar el botón de instalación por defecto
+installButton.style.display = 'none';
+
+// Detectar si la PWA es instalable
+window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('PWA es instalable');
+    e.preventDefault();
+    deferredPrompt = e;
+    installButton.style.display = 'block';
+});
+
+// Manejar el clic en el botón de instalación
+installButton.addEventListener('click', async () => {
+    console.log('Clic en instalar');
+    if (!deferredPrompt) {
+        console.log('No hay prompt de instalación disponible');
+        return;
+    }
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`Usuario eligió: ${outcome}`);
+    
+    if (outcome === 'accepted') {
+        console.log('Usuario aceptó instalar la PWA');
+    }
+    
+    deferredPrompt = null;
+    installButton.style.display = 'none';
+});
+
+// Detectar cuando la PWA ha sido instalada
+window.addEventListener('appinstalled', (e) => {
+    console.log('PWA instalada exitosamente');
+    installButton.style.display = 'none';
+});
+
+// Verificar si ya está instalada
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+    console.log('La aplicación ya está instalada');
+    installButton.style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('progress');
     const progressText = document.getElementById('progressText');

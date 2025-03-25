@@ -2,7 +2,7 @@
     "name": "Mi Lista de Tareas",
     "short_name": "Tareas",
     "description": "Una aplicación simple para gestionar tus tareas diarias",
-    "start_url": "/",
+    "start_url": "./",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#4a2fbd",

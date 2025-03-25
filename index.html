@@ -18,6 +18,7 @@
         <div class="header">
             <h1>Mi Lista de Tareas</h1>
             <div class="header-buttons">
+                <button id="installButton" class="install-button">📱 Instalar</button>
                 <button id="themeToggle" class="theme-toggle">🌙</button>
             </div>
         </div>
@@ -45,7 +46,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('ServiceWorker registrado exitosamente:', registration);
                     })

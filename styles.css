@@ -63,6 +63,24 @@ body {
     background: var(--item-bg);
 }
 
+.install-button {
+    background: linear-gradient(145deg, #6b47b8, #4a2fbd);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-right: 10px;
+    transition: all 0.3s ease;
+}
+
+.install-button:hover {
+    background: linear-gradient(145deg, #7b54d9, #5a3ad3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(74, 47, 189, 0.3);
+}
+
 .progress-section {
     margin-bottom: 2rem;
 }
