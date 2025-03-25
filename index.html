@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4a2fbd">
+    <meta name="description" content="Una aplicación simple para gestionar tus tareas diarias">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Tareas">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Mi Lista de Tareas</h1>
+            <div class="header-buttons">
+                <button id="themeToggle" class="theme-toggle">🌙</button>
+            </div>
+        </div>
+        <div class="progress-section">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress"></div>
+            </div>
+            <div class="progress-stats">
+                <span class="progress-text" id="progressText">0% completado</span>
+                <div class="task-summary">
+                    <span id="taskCount">0 tareas totales</span>
+                    <span id="pendingCount">0 pendientes</span>
+                </div>
+            </div>
+        </div>
+        <div class="todo-input">
+            <input type="text" id="taskInput" placeholder="Agregar nueva tarea...">
+            <button id="addTask">+</button>
+        </div>
+        <ul class="todo-list" id="todoList">
+            <!-- Las tareas se agregarán aquí -->
+        </ul>
+    </div>
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registrado exitosamente:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Error al registrar el ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
