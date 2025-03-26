@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeManager = new ThemeManager();
     const pwaManager = new PWAManager();
 
+    // Renderizar las tareas iniciales
+    uiManager.renderTasks();
+
     // Registrar el Service Worker
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
