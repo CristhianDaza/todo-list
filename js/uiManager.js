@@ -1,8 +1,9 @@
 // Gestión de la interfaz de usuario
 class UIManager {
-    constructor(taskManager, tagManager) {
+    constructor(taskManager, tagManager, calendarManager) {
         this.taskManager = taskManager;
         this.tagManager = tagManager;
+        this.calendarManager = calendarManager;
         this.currentFilter = 'all';
         this.initializeElements();
         this.initializeEventListeners();
@@ -36,6 +37,12 @@ class UIManager {
         this.confirmClearAll = document.getElementById('confirmClearAll');
         this.cancelClearAll = document.getElementById('cancelClearAll');
         this.taskToDelete = null;
+        this.dueDateInput = document.getElementById('dueDateInput');
+        this.listViewBtn = document.getElementById('listViewBtn');
+        this.calendarViewBtn = document.getElementById('calendarViewBtn');
+        this.listView = document.getElementById('listView');
+        this.calendarView = document.getElementById('calendarView');
+        this.sortSelect = document.getElementById('sortSelect');
     }
 
     initializeEventListeners() {
@@ -74,17 +81,33 @@ class UIManager {
         this.clearAllModal.addEventListener('click', (e) => {
             if (e.target === this.clearAllModal) this.hideClearAllModal();
         });
+
+        // Eventos de vista
+        this.listViewBtn.addEventListener('click', () => this.switchView('list'));
+        this.calendarViewBtn.addEventListener('click', () => this.switchView('calendar'));
+
+        // Evento de ordenamiento
+        this.sortSelect.addEventListener('change', () => this.handleSort());
+
+        // Solicitar permiso para notificaciones
+        if ('Notification' in window) {
+            Notification.requestPermission();
+        }
     }
 
     handleAddTask() {
         const text = this.taskInput.value.trim();
         if (text) {
             const tagId = this.tagSelect.value;
-            this.taskManager.addTask(text, tagId);
+            const dueDate = this.dueDateInput.value ? new Date(this.dueDateInput.value) : null;
+
+            this.taskManager.addTask(text, tagId, dueDate);
+
             this.taskInput.value = '';
+            this.dueDateInput.value = '';
             this.renderTasks();
-            this.renderTagFilters(); // Actualizar filtros al agregar tarea
-            this.updateTaskStats();
+            this.renderTagFilters();
+            this.calendarManager.render();
             this.showNotification('Tarea agregada exitosamente', 'success');
         } else {
             this.showNotification('Por favor ingresa una tarea válida', 'error');
@@ -136,10 +159,10 @@ class UIManager {
     renderTagFilters() {
         const tags = this.tagManager.getAllTags();
         let html = '<button class="tag-filter active" data-tag-id="all">Todas</button>';
-        
+
         // Obtener solo las etiquetas que están en uso
         const usedTagIds = new Set(this.taskManager.tasks.map(task => task.tagId).filter(Boolean));
-        
+
         tags.forEach(tag => {
             if (usedTagIds.has(tag.id)) {
                 html += `
@@ -150,7 +173,7 @@ class UIManager {
                     </button>`;
             }
         });
-        
+
         this.tagFilters.innerHTML = html;
         this.updateActiveFilter();
     }
@@ -158,11 +181,11 @@ class UIManager {
     updateTagSelect() {
         const tags = this.tagManager.getAllTags();
         let html = '<option value="">Sin etiqueta</option>';
-        
+
         tags.forEach(tag => {
             html += `<option value="${tag.id}">${tag.name}</option>`;
         });
-        
+
         this.tagSelect.innerHTML = html;
     }
 
@@ -226,17 +249,13 @@ class UIManager {
         input.select();
     }
 
-    renderTasks() {
+    renderTasks(tasks = this.taskManager.tasks) {
         this.todoList.innerHTML = '';
-        const tasks = this.currentFilter === 'all' 
-            ? this.taskManager.tasks 
-            : this.taskManager.getTasksByTag(this.currentFilter);
-        
         if (tasks.length === 0) {
             const emptyMessage = document.createElement('li');
             emptyMessage.className = 'empty-message';
-            emptyMessage.textContent = this.currentFilter === 'all' 
-                ? 'No hay tareas pendientes' 
+            emptyMessage.textContent = this.currentFilter === 'all'
+                ? 'No hay tareas pendientes'
                 : 'No hay tareas con esta etiqueta';
             this.todoList.appendChild(emptyMessage);
         } else {
@@ -250,25 +269,20 @@ class UIManager {
 
     createTaskElement(task, index) {
         const li = document.createElement('li');
-        li.dataset.id = task.id;
         li.dataset.index = index;
-        li.className = task.completed ? 'completed' : '';
         li.draggable = true;
+        if (task.completed) li.classList.add('completed');
 
-        // Eventos de arrastrar
-        this.addDragListeners(li);
-        
         // Checkbox
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = task.completed;
         checkbox.addEventListener('change', () => this.handleToggleTask(task.id));
-        
+
         // Contenido de la tarea
         const taskContent = document.createElement('div');
         taskContent.className = 'task-content';
 
-        // Contenedor principal de la tarea (texto y etiqueta)
         const taskMain = document.createElement('div');
         taskMain.className = 'task-main';
 
@@ -276,7 +290,8 @@ class UIManager {
         span.textContent = task.text;
         span.addEventListener('dblclick', () => this.startEditing(task.id));
 
-        taskMain.appendChild(span);
+        const metadata = document.createElement('div');
+        metadata.className = 'task-metadata';
 
         // Etiqueta de la tarea
         if (task.tagId) {
@@ -286,35 +301,50 @@ class UIManager {
                 tagSpan.className = 'task-tag';
                 tagSpan.textContent = tag.name;
                 tagSpan.style.backgroundColor = tag.color;
-                taskMain.appendChild(tagSpan);
+                metadata.appendChild(tagSpan);
             }
+        }
+
+        // Fecha límite
+        if (task.dueDate) {
+            const dueSpan = document.createElement('span');
+            dueSpan.className = 'task-due-date';
+            const dueDate = new Date(task.dueDate);
+            const isOverdue = !task.completed && dueDate < new Date();
+
+            dueSpan.textContent = `📅 ${this.formatDate(dueDate)}`;
+            if (isOverdue) dueSpan.classList.add('overdue');
+
+            metadata.appendChild(dueSpan);
         }
 
         // Tiempo
         const timeSpan = document.createElement('span');
         timeSpan.className = 'task-time';
         timeSpan.textContent = this.getRelativeTime(task.createdAt);
+        metadata.appendChild(timeSpan);
 
+        taskMain.appendChild(span);
+        taskMain.appendChild(metadata);
         taskContent.appendChild(taskMain);
-        taskContent.appendChild(timeSpan);
-        
+
         // Botones de acción
         const actions = document.createElement('div');
         actions.className = 'actions';
-        
+
         const editButton = document.createElement('button');
         editButton.innerHTML = '✎';
         editButton.className = 'edit-btn';
         editButton.addEventListener('click', () => this.startEditing(task.id));
-        
+
         const deleteButton = document.createElement('button');
         deleteButton.textContent = '×';
         deleteButton.className = 'delete-btn';
         deleteButton.addEventListener('click', () => this.showDeleteModal(task.id));
-        
+
         actions.appendChild(editButton);
         actions.appendChild(deleteButton);
-        
+
         li.appendChild(checkbox);
         li.appendChild(taskContent);
         li.appendChild(actions);
@@ -397,7 +427,7 @@ class UIManager {
 
         const value = Math.floor(diffInSeconds / rule.divisor);
         const unit = value === 1 ? rule.unit[0] : rule.unit[1];
-        
+
         return `hace ${value} ${unit}`;
     }
 
@@ -408,7 +438,7 @@ class UIManager {
         li.addEventListener('dragenter', this.handleDragEnter.bind(this));
         li.addEventListener('dragleave', this.handleDragLeave.bind(this));
         li.addEventListener('drop', this.handleDrop.bind(this));
-        
+
         // Touch events
         li.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
         li.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
@@ -448,10 +478,10 @@ class UIManager {
         e.preventDefault();
         const li = e.target.closest('li');
         if (!li || !this.draggedItem) return;
-        
+
         li.classList.remove('drag-over');
         const targetIndex = parseInt(li.dataset.index);
-        
+
         if (targetIndex !== this.draggedIndex) {
             const item = this.taskManager.tasks[this.draggedIndex];
             this.taskManager.tasks.splice(this.draggedIndex, 1);
@@ -463,8 +493,8 @@ class UIManager {
 
     // Touch handlers
     handleTouchStart(e) {
-        if (e.target.type === 'checkbox' || 
-            e.target.classList.contains('delete-btn') || 
+        if (e.target.type === 'checkbox' ||
+            e.target.classList.contains('delete-btn') ||
             e.target.classList.contains('edit-btn')) {
             return;
         }
@@ -473,7 +503,7 @@ class UIManager {
         this.touchStartY = touch.clientY;
         this.draggedTouchElement = e.currentTarget;
         this.draggedIndex = parseInt(this.draggedTouchElement.dataset.index);
-        
+
         setTimeout(() => {
             if (this.touchStartY !== null) {
                 this.draggedTouchElement.classList.add('dragging');
@@ -483,28 +513,28 @@ class UIManager {
 
     handleTouchMove(e) {
         if (!this.draggedTouchElement || !this.touchStartY) return;
-        
+
         const touch = e.touches[0];
         this.currentTouchY = touch.clientY;
-        
+
         const deltaY = this.currentTouchY - this.touchStartY;
         if (Math.abs(deltaY) < 10) return;
-        
+
         e.preventDefault();
         this.draggedTouchElement.style.transform = `translateY(${deltaY}px)`;
-        
+
         const elements = [...this.todoList.querySelectorAll('li:not(.dragging)')];
         const closest = elements.reduce((closest, child) => {
             const box = child.getBoundingClientRect();
             const offset = this.currentTouchY - box.top - box.height / 2;
-            
+
             if (offset < 0 && offset > closest.offset) {
                 return { offset, element: child };
             } else {
                 return closest;
             }
         }, { offset: Number.NEGATIVE_INFINITY }).element;
-        
+
         if (closest) {
             const targetIndex = parseInt(closest.dataset.index);
             if (targetIndex !== this.draggedIndex) {
@@ -512,7 +542,6 @@ class UIManager {
                 this.taskManager.tasks.splice(this.draggedIndex, 1);
                 this.taskManager.tasks.splice(targetIndex, 0, item);
                 this.taskManager.saveTasks();
-                this.renderTasks();
                 this.draggedIndex = targetIndex;
             }
         }
@@ -528,16 +557,46 @@ class UIManager {
             }
             return;
         }
-        
+
         if (this.draggedTouchElement) {
             this.draggedTouchElement.classList.remove('dragging');
             this.draggedTouchElement.style.transform = '';
             this.draggedTouchElement = null;
         }
-        
+
         this.touchStartY = null;
         this.currentTouchY = null;
         e.preventDefault();
+    }
+
+    switchView(view) {
+        if (view === 'list') {
+            this.listView.classList.add('active');
+            this.calendarView.classList.remove('active');
+            this.listViewBtn.classList.add('active');
+            this.calendarViewBtn.classList.remove('active');
+        } else {
+            this.listView.classList.remove('active');
+            this.calendarView.classList.add('active');
+            this.listViewBtn.classList.remove('active');
+            this.calendarViewBtn.classList.add('active');
+            this.calendarManager.render();
+        }
+    }
+
+    handleSort() {
+        const sortBy = this.sortSelect.value;
+        let tasks;
+
+        if (sortBy === 'dueDate') {
+            tasks = this.taskManager.getTasksSortedByDueDate();
+        } else {
+            tasks = [...this.taskManager.tasks].sort((a, b) => {
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+        }
+
+        this.renderTasks(tasks);
     }
 
     showClearAllModal() {
@@ -555,5 +614,30 @@ class UIManager {
         this.updateTaskStats();
         this.hideClearAllModal();
         this.showNotification('Se han eliminado todas las tareas', 'info');
+    }
+
+    formatDate(date) {
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        if (this.isSameDay(date, now)) {
+            return 'Hoy ' + date.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+        } else if (this.isSameDay(date, tomorrow)) {
+            return 'Mañana ' + date.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+        } else {
+            return date.toLocaleDateString('es', {
+                day: '2-digit',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    }
+
+    isSameDay(date1, date2) {
+        return date1.getFullYear() === date2.getFullYear() &&
+            date1.getMonth() === date2.getMonth() &&
+            date1.getDate() === date2.getDate();
     }
 }

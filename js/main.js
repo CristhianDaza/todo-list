@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializar los manejadores
     const taskManager = new TaskManager();
     const tagManager = new TagManager();
-    const uiManager = new UIManager(taskManager, tagManager);
+    const calendarManager = new CalendarManager(taskManager);
+    const uiManager = new UIManager(taskManager, tagManager, calendarManager);
     const themeManager = new ThemeManager();
     const pwaManager = new PWAManager();
 

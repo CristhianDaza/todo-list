@@ -65,17 +65,64 @@
                 <button id="clearAllButton" class="clear-all-button" style="display: none">🗑️ Limpiar todo</button>
             </div>
         </div>
-        <div class="tag-filters" id="tagFilters">
-            <button class="tag-filter active" data-tag-id="all">Todas</button>
-            <!-- Las etiquetas se agregarán aquí -->
-        </div>
         <div class="todo-input">
-            <input type="text" id="taskInput" placeholder="Agregar nueva tarea...">
-            <select id="tagSelect" class="tag-select">
-                <!-- Las etiquetas se agregarán aquí -->
-            </select>
-            <button id="addTask">+</button>
+            <input type="text" id="taskInput" placeholder="Agregar nueva tarea">
+            <div class="task-options">
+                <select id="tagSelect">
+                    <option value="">Sin etiqueta</option>
+                </select>
+                <input type="datetime-local" id="dueDateInput" class="date-input">
+                <button id="addTask">+</button>
+            </div>
         </div>
+
+        <div class="controls-container">
+            <div class="view-controls">
+                <div class="view-buttons">
+                    <button id="listViewBtn" class="view-button active">📝 Lista</button>
+                    <button id="calendarViewBtn" class="view-button">📅 Calendario</button>
+                </div>
+                <div class="sort-options">
+                    <select id="sortSelect" class="sort-select">
+                        <option value="created">Fecha de creación</option>
+                        <option value="dueDate">Fecha de vencimiento</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="listView" class="view active">
+                <div class="tag-filters" id="tagFilters">
+                    <button class="tag-filter active" data-tag-id="all">Todas</button>
+                    <!-- Las etiquetas se agregarán aquí -->
+                </div>
+                <ul class="todo-list" id="todoList">
+                    <!-- Las tareas se agregarán aquí -->
+                </ul>
+            </div>
+
+            <div id="calendarView" class="view">
+                <div class="calendar-header">
+                    <button id="prevMonth">◀</button>
+                    <h2 id="currentMonth">Marzo 2025</h2>
+                    <button id="nextMonth">▶</button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-days">
+                        <span>Dom</span>
+                        <span>Lun</span>
+                        <span>Mar</span>
+                        <span>Mié</span>
+                        <span>Jue</span>
+                        <span>Vie</span>
+                        <span>Sáb</span>
+                    </div>
+                    <div id="calendarDays" class="calendar-dates">
+                        <!-- Los días se agregarán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <button id="addTagButton" class="add-tag-button">+ Nueva etiqueta</button>
         
         <!-- Modal para nueva etiqueta -->
@@ -93,14 +140,11 @@
                 </div>
             </div>
         </div>
-
-        <ul class="todo-list" id="todoList">
-            <!-- Las tareas se agregarán aquí -->
-        </ul>
     </div>
     <!-- Módulos JavaScript -->
     <script src="js/taskManager.js"></script>
     <script src="js/tagManager.js"></script>
+    <script src="js/calendarManager.js"></script>
     <script src="js/uiManager.js"></script>
     <script src="js/themeManager.js"></script>
     <script src="js/pwaManager.js"></script>
