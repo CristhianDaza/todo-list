@@ -139,10 +139,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderTasks() {
         todoList.innerHTML = '';
-        tasks.forEach(task => {
+        tasks.forEach((task, index) => {
             const li = document.createElement('li');
             li.dataset.id = task.id;
+            li.dataset.index = index;
             li.className = task.completed ? 'completed' : '';
+            li.draggable = true;
+
+            // Eventos de arrastrar
+            li.addEventListener('dragstart', handleDragStart);
+            li.addEventListener('dragend', handleDragEnd);
+            li.addEventListener('dragover', handleDragOver);
+            li.addEventListener('dragenter', handleDragEnter);
+            li.addEventListener('dragleave', handleDragLeave);
+            li.addEventListener('drop', handleDrop);
             
             // Checkbox para completar
             const checkbox = document.createElement('input');
@@ -243,6 +253,69 @@ document.addEventListener('DOMContentLoaded', () => {
         tasks = tasks.filter(task => task.id !== id);
         saveTasks();
         renderTasks();
+    }
+
+    // Variables para el drag and drop
+    let draggedItem = null;
+    let draggedIndex = null;
+
+    function handleDragStart(e) {
+        draggedItem = this;
+        draggedIndex = parseInt(this.dataset.index);
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', ''); // Necesario para Firefox
+
+        // Limpiar clases de otros elementos
+        document.querySelectorAll('.todo-list li').forEach(item => {
+            if (item !== this) item.classList.remove('drag-over', 'dragging');
+        });
+    }
+
+    function handleDragEnd(e) {
+        draggedItem = null;
+        draggedIndex = null;
+        this.classList.remove('dragging');
+        document.querySelectorAll('.todo-list li').forEach(item => {
+            item.classList.remove('drag-over');
+        });
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    function handleDragEnter(e) {
+        if (this !== draggedItem) {
+            this.classList.add('drag-over');
+        }
+    }
+
+    function handleDragLeave(e) {
+        this.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        this.classList.remove('drag-over');
+        
+        if (draggedItem && draggedItem !== this) {
+            const dropIndex = parseInt(this.dataset.index);
+            const draggedTask = tasks[draggedIndex];
+            
+            // Reordenar el array
+            tasks.splice(draggedIndex, 1);
+            tasks.splice(dropIndex, 0, draggedTask);
+            
+            saveTasks();
+            renderTasks();
+        }
+        
+        return false;
     }
 
     function saveTasks() {

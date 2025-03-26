@@ -206,11 +206,47 @@ input[type="text"]:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: transform 0.2s;
+    transition: transform 0.2s, background-color 0.3s, opacity 0.3s, border 0.2s;
+    cursor: move;
+    user-select: none;
 }
 
 .todo-list li:hover {
     transform: translateX(5px);
+}
+
+.todo-list li.dragging {
+    opacity: 0.6;
+    background: var(--bg-color);
+    transform: scale(0.98);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1000;
+}
+
+.todo-list li.drag-over {
+    border: 2px dashed var(--accent-color);
+    padding: calc(1rem - 2px);
+    background-color: var(--bg-color);
+    transform: translateY(4px);
+    position: relative;
+}
+
+.todo-list li.drag-over::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -10px;
+    height: 4px;
+    background: var(--accent-color);
+    border-radius: 2px;
+    opacity: 0.5;
+}
+
+.todo-list li.completed {
+    background-color: var(--item-bg);
+    opacity: 0.8;
 }
 
 .todo-list li.completed .task-content span:first-child {
