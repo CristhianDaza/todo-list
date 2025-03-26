@@ -166,9 +166,13 @@ document.addEventListener('DOMContentLoaded', () => {
         taskCount.textContent = `${totalTasks} ${totalTasks === 1 ? 'tarea total' : 'tareas totales'}`;
         pendingCount.textContent = `${pendingTasks} ${pendingTasks === 1 ? 'pendiente' : 'pendientes'}`;
 
-        if (progressPercentage === 100) {
+        // Solo mostrar la notificación si se acaba de completar la última tarea
+        if (progressPercentage === 100 && pendingTasks === 0 && completedTasks > 0 && 
+            !updateProgress.wasComplete) {
             showNotification('¡Todas las tareas han sido completadas!', 'success');
         }
+        // Guardar el estado actual de completitud
+        updateProgress.wasComplete = (progressPercentage === 100 && completedTasks > 0);
     }   
 
     function getRelativeTime(dateString) {
@@ -195,6 +199,146 @@ document.addEventListener('DOMContentLoaded', () => {
         return `hace ${value} ${unit}`;
     }
 
+    // Variables para el drag and drop
+    let draggedItem = null;
+    let draggedIndex = null;
+    let touchStartY = null;
+    let currentTouchY = null;
+    let draggedTouchElement = null;
+
+    function handleDragStart(e) {
+        draggedItem = e.target;
+        draggedIndex = parseInt(draggedItem.dataset.index);
+        setTimeout(() => draggedItem.classList.add('dragging'), 0);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', draggedItem.innerHTML);
+    }
+
+    function handleTouchStart(e) {
+        // Si el toque es en el checkbox o en los botones, no iniciar el drag
+        if (e.target.type === 'checkbox' || 
+            e.target.classList.contains('delete-btn') || 
+            e.target.classList.contains('edit-btn')) {
+            return;
+        }
+
+        const touch = e.touches[0];
+        touchStartY = touch.clientY;
+        draggedTouchElement = e.currentTarget;
+        draggedIndex = parseInt(draggedTouchElement.dataset.index);
+        
+        // Usar un timeout para distinguir entre tap y drag
+        setTimeout(() => {
+            if (touchStartY !== null) {
+                draggedTouchElement.classList.add('dragging');
+                // Prevenir el scroll solo si realmente estamos arrastrando
+                e.preventDefault();
+            }
+        }, 200);
+    }
+
+    function handleTouchMove(e) {
+        if (!draggedTouchElement || !touchStartY) return;
+        
+        const touch = e.touches[0];
+        currentTouchY = touch.clientY;
+        
+        // Si el movimiento es muy pequeño, no hacer nada
+        const deltaY = currentTouchY - touchStartY;
+        if (Math.abs(deltaY) < 10) return;
+        
+        // Calcular la diferencia de posición
+        draggedTouchElement.style.transform = `translateY(${deltaY}px)`;
+        
+        // Encontrar el elemento más cercano
+        const elements = [...todoList.querySelectorAll('li:not(.dragging)')];
+        const closest = elements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = currentTouchY - box.top - box.height / 2;
+            
+            if (offset < 0 && offset > closest.offset) {
+                return { offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+        
+        if (closest) {
+            const targetIndex = parseInt(closest.dataset.index);
+            if (targetIndex !== draggedIndex) {
+                // Reordenar la lista
+                const item = tasks[draggedIndex];
+                tasks.splice(draggedIndex, 1);
+                tasks.splice(targetIndex, 0, item);
+                saveTasks();
+                renderTasks();
+                draggedIndex = targetIndex;
+            }
+        }
+        
+        e.preventDefault();
+    }
+
+    function handleTouchEnd(e) {
+        // Si no hubo movimiento significativo, permitir el evento click
+        if (!draggedTouchElement || Math.abs(currentTouchY - touchStartY) < 10) {
+            touchStartY = null;
+            currentTouchY = null;
+            if (draggedTouchElement) {
+                draggedTouchElement.classList.remove('dragging');
+                draggedTouchElement = null;
+            }
+            return;
+        }
+        
+        if (draggedTouchElement) {
+            draggedTouchElement.classList.remove('dragging');
+            draggedTouchElement.style.transform = '';
+            draggedTouchElement = null;
+        }
+        
+        touchStartY = null;
+        currentTouchY = null;
+        e.preventDefault();
+    }
+
+    function handleDragEnd(e) {
+        draggedItem.classList.remove('dragging');
+        draggedItem = null;
+        draggedIndex = null;
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDragEnter(e) {
+        e.preventDefault();
+        e.target.closest('li')?.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+        e.target.closest('li')?.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        const li = e.target.closest('li');
+        if (!li || !draggedItem) return;
+        
+        li.classList.remove('drag-over');
+        const targetIndex = parseInt(li.dataset.index);
+        
+        if (targetIndex !== draggedIndex) {
+            const item = tasks[draggedIndex];
+            tasks.splice(draggedIndex, 1);
+            tasks.splice(targetIndex, 0, item);
+            saveTasks();
+            renderTasks();
+        }
+    }
+
     function renderTasks() {
         todoList.innerHTML = '';
         tasks.forEach((task, index) => {
@@ -204,13 +348,18 @@ document.addEventListener('DOMContentLoaded', () => {
             li.className = task.completed ? 'completed' : '';
             li.draggable = true;
 
-            // Eventos de arrastrar
+            // Eventos de arrastrar para desktop
             li.addEventListener('dragstart', handleDragStart);
             li.addEventListener('dragend', handleDragEnd);
             li.addEventListener('dragover', handleDragOver);
             li.addEventListener('dragenter', handleDragEnter);
             li.addEventListener('dragleave', handleDragLeave);
             li.addEventListener('drop', handleDrop);
+
+            // Eventos touch para mobile
+            li.addEventListener('touchstart', handleTouchStart);
+            li.addEventListener('touchmove', handleTouchMove);
+            li.addEventListener('touchend', handleTouchEnd);
             
             // Checkbox para completar
             const checkbox = document.createElement('input');
@@ -327,69 +476,6 @@ document.addEventListener('DOMContentLoaded', () => {
         saveTasks();
         renderTasks();
         showNotification('Tarea eliminada', 'info');
-    }
-
-    // Variables para el drag and drop
-    let draggedItem = null;
-    let draggedIndex = null;
-
-    function handleDragStart(e) {
-        draggedItem = this;
-        draggedIndex = parseInt(this.dataset.index);
-        this.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', ''); // Necesario para Firefox
-
-        // Limpiar clases de otros elementos
-        document.querySelectorAll('.todo-list li').forEach(item => {
-            if (item !== this) item.classList.remove('drag-over', 'dragging');
-        });
-    }
-
-    function handleDragEnd(e) {
-        draggedItem = null;
-        draggedIndex = null;
-        this.classList.remove('dragging');
-        document.querySelectorAll('.todo-list li').forEach(item => {
-            item.classList.remove('drag-over');
-        });
-    }
-
-    function handleDragOver(e) {
-        if (e.preventDefault) e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        return false;
-    }
-
-    function handleDragEnter(e) {
-        if (this !== draggedItem) {
-            this.classList.add('drag-over');
-        }
-    }
-
-    function handleDragLeave(e) {
-        this.classList.remove('drag-over');
-    }
-
-    function handleDrop(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        
-        this.classList.remove('drag-over');
-        
-        if (draggedItem && draggedItem !== this) {
-            const dropIndex = parseInt(this.dataset.index);
-            const draggedTask = tasks[draggedIndex];
-            
-            // Reordenar el array
-            tasks.splice(draggedIndex, 1);
-            tasks.splice(dropIndex, 0, draggedTask);
-            
-            saveTasks();
-            renderTasks();
-        }
-        
-        return false;
     }
 
     function saveTasks() {

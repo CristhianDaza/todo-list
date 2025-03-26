@@ -203,50 +203,41 @@ input[type="text"]:focus {
 }
 
 .todo-list li {
-    background: var(--item-bg);
-    color: var(--text-color);
-    padding: 1rem;
-    border-radius: 6px;
-    margin-bottom: 0.5rem;
+    background: var(--container-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    padding: 12px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    transition: transform 0.2s, background-color 0.3s, opacity 0.3s, border 0.2s;
-    cursor: move;
+    gap: 12px;
+    transition: all 0.3s ease;
+    touch-action: none;
     user-select: none;
-}
-
-.todo-list li:hover {
-    transform: translateX(5px);
+    position: relative;
+    z-index: 1;
 }
 
 .todo-list li.dragging {
-    opacity: 0.6;
-    background: var(--bg-color);
-    transform: scale(0.98);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    position: relative;
+    opacity: 0.9;
+    background: var(--item-bg);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     z-index: 1000;
+    cursor: grabbing;
 }
 
 .todo-list li.drag-over {
-    border: 2px dashed var(--accent-color);
-    padding: calc(1rem - 2px);
-    background-color: var(--bg-color);
-    transform: translateY(4px);
-    position: relative;
+    transform: translateY(8px);
 }
 
-.todo-list li.drag-over::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -10px;
-    height: 4px;
-    background: var(--accent-color);
-    border-radius: 2px;
-    opacity: 0.5;
+@media (hover: hover) {
+    .todo-list li {
+        cursor: grab;
+    }
+    
+    .todo-list li:hover {
+        background: var(--item-bg);
+    }
 }
 
 .todo-list li.completed {
