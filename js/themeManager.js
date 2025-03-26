@@ -3,25 +3,28 @@ class ThemeManager {
     constructor() {
         this.themeToggle = document.getElementById('themeToggle');
         this.initTheme();
-        this.initEventListeners();
+        this.setupEventListeners();
     }
 
     initTheme() {
         const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        this.themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        this.applyTheme(savedTheme);
     }
 
-    initEventListeners() {
+    setupEventListeners() {
         this.themeToggle.addEventListener('click', () => this.toggleTheme());
     }
 
     toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        this.themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        this.applyTheme(newTheme);
+    }
+
+    applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        this.themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        this.themeToggle.setAttribute('aria-label', `Cambiar a tema ${theme === 'dark' ? 'claro' : 'oscuro'}`);
     }
 }

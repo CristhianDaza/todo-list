@@ -50,34 +50,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressText = document.getElementById('progressText');
     const taskCount = document.getElementById('taskCount');
     const pendingCount = document.getElementById('pendingCount');
-    const themeToggle = document.getElementById('themeToggle');
     
-    // Cargar tema guardado
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-    
-    // Manejar cambio de tema
-    themeToggle.addEventListener('click', () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
-    });
-    const taskInput = document.getElementById('taskInput');
-    const addTaskButton = document.getElementById('addTask');
-    const todoList = document.getElementById('todoList');
-
     // Cargar tareas guardadas
     let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
     renderTasks();
 
     // Agregar tarea con el botón
+    const addTaskButton = document.getElementById('addTask');
     addTaskButton.addEventListener('click', addTask);
 
     // Agregar tarea con Enter
+    const taskInput = document.getElementById('taskInput');
     taskInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             addTask();
@@ -481,3 +464,21 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }
 });
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('ServiceWorker registration successful');
+            })
+            .catch(err => {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+    });
+}
+
+// Notifications
+if ('Notification' in window) {
+    Notification.requestPermission();
+}
