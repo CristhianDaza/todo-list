@@ -231,8 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             if (touchStartY !== null) {
                 draggedTouchElement.classList.add('dragging');
-                // Prevenir el scroll solo si realmente estamos arrastrando
-                e.preventDefault();
             }
         }, 200);
     }
@@ -246,6 +244,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Si el movimiento es muy pequeño, no hacer nada
         const deltaY = currentTouchY - touchStartY;
         if (Math.abs(deltaY) < 10) return;
+        
+        // Prevenir el scroll solo si estamos arrastrando
+        e.preventDefault();
         
         // Calcular la diferencia de posición
         draggedTouchElement.style.transform = `translateY(${deltaY}px)`;
@@ -275,8 +276,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 draggedIndex = targetIndex;
             }
         }
-        
-        e.preventDefault();
     }
 
     function handleTouchEnd(e) {
@@ -356,10 +355,10 @@ document.addEventListener('DOMContentLoaded', () => {
             li.addEventListener('dragleave', handleDragLeave);
             li.addEventListener('drop', handleDrop);
 
-            // Eventos touch para mobile
-            li.addEventListener('touchstart', handleTouchStart);
-            li.addEventListener('touchmove', handleTouchMove);
-            li.addEventListener('touchend', handleTouchEnd);
+            // Eventos touch para mobile con opciones passive
+            li.addEventListener('touchstart', handleTouchStart, { passive: true });
+            li.addEventListener('touchmove', handleTouchMove, { passive: false });
+            li.addEventListener('touchend', handleTouchEnd, { passive: false });
             
             // Checkbox para completar
             const checkbox = document.createElement('input');
