@@ -89,9 +89,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.textContent = message;
+        notification.style.transform = 'translateX(100%)';
+        notification.style.opacity = '0';
 
         const notifications = document.getElementById('notifications');
         notifications.appendChild(notification);
+
+        // Forzar un reflow para asegurar la animación
+        notification.offsetHeight;
+
+        // Mostrar la notificación con animación
+        notification.style.transform = 'translateX(0)';
+        notification.style.opacity = '1';
 
         // Auto-eliminar después de 3 segundos
         setTimeout(() => {
@@ -156,7 +165,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         taskCount.textContent = `${totalTasks} ${totalTasks === 1 ? 'tarea total' : 'tareas totales'}`;
         pendingCount.textContent = `${pendingTasks} ${pendingTasks === 1 ? 'pendiente' : 'pendientes'}`;
-    }
+
+        if (progressPercentage === 100) {
+            showNotification('¡Todas las tareas han sido completadas!', 'success');
+        }
+    }   
 
     function getRelativeTime(dateString) {
         const date = new Date(dateString);
@@ -293,11 +306,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function toggleTask(id) {
-        tasks = tasks.map(task => 
-            task.id === id ? {...task, completed: !task.completed} : task
+        const task = tasks.find(t => t.id === id);
+        const newStatus = !task.completed;
+        
+        tasks = tasks.map(t => 
+            t.id === id ? {...t, completed: newStatus} : t
         );
+        
         saveTasks();
         renderTasks();
+        
+        showNotification(
+            newStatus ? '✅ Tarea completada' : '↩️ Tarea marcada como pendiente',
+            'success'
+        );
     }
 
     function deleteTask(id) {
