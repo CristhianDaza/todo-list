@@ -13,12 +13,13 @@ class TaskManager {
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
     }
 
-    addTask(text) {
+    addTask(text, tagId) {
         const task = {
             id: Date.now().toString(),
             text: text,
             completed: false,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            tagId: tagId
         };
         this.tasks.unshift(task);
         this.saveTasks();
@@ -50,6 +51,16 @@ class TaskManager {
         return false;
     }
 
+    updateTaskTag(id, tagId) {
+        const task = this.tasks.find(t => t.id === id);
+        if (task) {
+            task.tagId = tagId;
+            this.saveTasks();
+            return true;
+        }
+        return false;
+    }
+
     getProgress() {
         const totalTasks = this.tasks.length;
         const completedTasks = this.tasks.filter(task => task.completed).length;
@@ -62,5 +73,9 @@ class TaskManager {
             pending: pendingTasks,
             percentage: progressPercentage
         };
+    }
+
+    getTasksByTag(tagId) {
+        return tagId ? this.tasks.filter(task => task.tagId === tagId) : this.tasks;
     }
 }

@@ -50,16 +50,42 @@
                 </div>
             </div>
         </div>
+        <div class="tag-filters" id="tagFilters">
+            <button class="tag-filter active" data-tag-id="all">Todas</button>
+            <!-- Las etiquetas se agregarán aquí -->
+        </div>
         <div class="todo-input">
             <input type="text" id="taskInput" placeholder="Agregar nueva tarea...">
+            <select id="tagSelect" class="tag-select">
+                <!-- Las etiquetas se agregarán aquí -->
+            </select>
             <button id="addTask">+</button>
         </div>
+        <button id="addTagButton" class="add-tag-button">+ Nueva etiqueta</button>
+        
+        <!-- Modal para nueva etiqueta -->
+        <div id="tagModal" class="modal">
+            <div class="modal-content">
+                <h2>Nueva Etiqueta</h2>
+                <input type="text" id="tagNameInput" placeholder="Nombre de la etiqueta">
+                <div class="color-picker">
+                    <input type="color" id="tagColorInput">
+                    <button id="randomColorButton">Color aleatorio</button>
+                </div>
+                <div class="modal-buttons">
+                    <button id="saveTag" class="modal-button">Guardar</button>
+                    <button id="cancelTag" class="modal-button cancel-modal-btn">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
         <ul class="todo-list" id="todoList">
             <!-- Las tareas se agregarán aquí -->
         </ul>
     </div>
     <!-- Módulos JavaScript -->
     <script src="js/taskManager.js"></script>
+    <script src="js/tagManager.js"></script>
     <script src="js/uiManager.js"></script>
     <script src="js/themeManager.js"></script>
     <script src="js/pwaManager.js"></script>

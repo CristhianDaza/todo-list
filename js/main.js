@@ -2,7 +2,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar los manejadores
     const taskManager = new TaskManager();
-    const uiManager = new UIManager(taskManager);
+    const tagManager = new TagManager();
+    const uiManager = new UIManager(taskManager, tagManager);
     const themeManager = new ThemeManager();
     const pwaManager = new PWAManager();
 

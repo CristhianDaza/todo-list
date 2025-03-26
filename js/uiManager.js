@@ -1,19 +1,32 @@
 // Gestión de la interfaz de usuario
 class UIManager {
-    constructor(taskManager) {
+    constructor(taskManager, tagManager) {
         this.taskManager = taskManager;
+        this.tagManager = tagManager;
+        this.currentFilter = 'all';
         this.initializeElements();
         this.initializeEventListeners();
+        this.renderTagFilters();
+        this.updateTagSelect();
     }
 
     initializeElements() {
         this.todoList = document.getElementById('todoList');
         this.taskInput = document.getElementById('taskInput');
+        this.tagSelect = document.getElementById('tagSelect');
         this.addTaskButton = document.getElementById('addTask');
         this.progressBar = document.getElementById('progress');
         this.progressText = document.getElementById('progressText');
         this.taskCount = document.getElementById('taskCount');
         this.pendingCount = document.getElementById('pendingCount');
+        this.tagFilters = document.getElementById('tagFilters');
+        this.addTagButton = document.getElementById('addTagButton');
+        this.tagModal = document.getElementById('tagModal');
+        this.tagNameInput = document.getElementById('tagNameInput');
+        this.tagColorInput = document.getElementById('tagColorInput');
+        this.randomColorButton = document.getElementById('randomColorButton');
+        this.saveTagButton = document.getElementById('saveTag');
+        this.cancelTagButton = document.getElementById('cancelTag');
         this.deleteModal = document.getElementById('deleteModal');
         this.confirmDelete = document.getElementById('confirmDelete');
         this.cancelDelete = document.getElementById('cancelDelete');
@@ -25,6 +38,24 @@ class UIManager {
         this.taskInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.handleAddTask();
         });
+
+        // Eventos de etiquetas
+        this.addTagButton.addEventListener('click', () => this.showTagModal());
+        this.randomColorButton.addEventListener('click', () => {
+            this.tagColorInput.value = this.tagManager.getRandomColor();
+        });
+        this.saveTagButton.addEventListener('click', () => this.handleSaveTag());
+        this.cancelTagButton.addEventListener('click', () => this.hideTagModal());
+        this.tagModal.addEventListener('click', (e) => {
+            if (e.target === this.tagModal) this.hideTagModal();
+        });
+        this.tagFilters.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tag-filter')) {
+                this.handleFilterChange(e.target.dataset.tagId);
+            }
+        });
+
+        // Eventos de eliminación
         this.confirmDelete.addEventListener('click', () => this.handleConfirmDelete());
         this.cancelDelete.addEventListener('click', () => this.hideDeleteModal());
         this.deleteModal.addEventListener('click', (e) => {
@@ -35,13 +66,90 @@ class UIManager {
     handleAddTask() {
         const text = this.taskInput.value.trim();
         if (text) {
-            this.taskManager.addTask(text);
+            const tagId = this.tagSelect.value;
+            this.taskManager.addTask(text, tagId);
             this.taskInput.value = '';
             this.renderTasks();
+            this.renderTagFilters(); // Actualizar filtros al agregar tarea
             this.showNotification('Tarea agregada exitosamente', 'success');
         } else {
             this.showNotification('Por favor ingresa una tarea válida', 'error');
         }
+    }
+
+    showTagModal() {
+        this.tagNameInput.value = '';
+        this.tagColorInput.value = this.tagManager.getRandomColor();
+        this.tagModal.classList.add('show');
+    }
+
+    hideTagModal() {
+        this.tagModal.classList.remove('show');
+    }
+
+    handleSaveTag() {
+        const name = this.tagNameInput.value.trim();
+        const color = this.tagColorInput.value;
+
+        if (name) {
+            const tag = this.tagManager.addTag(name, color);
+            if (tag) {
+                this.renderTagFilters();
+                this.updateTagSelect();
+                this.hideTagModal();
+                this.showNotification('Etiqueta creada exitosamente', 'success');
+            } else {
+                this.showNotification('Ya existe una etiqueta con ese nombre', 'error');
+            }
+        } else {
+            this.showNotification('Por favor ingresa un nombre para la etiqueta', 'error');
+        }
+    }
+
+    handleFilterChange(tagId) {
+        this.currentFilter = tagId;
+        this.updateActiveFilter();
+        this.renderTasks();
+    }
+
+    updateActiveFilter() {
+        const filters = this.tagFilters.querySelectorAll('.tag-filter');
+        filters.forEach(filter => {
+            filter.classList.toggle('active', filter.dataset.tagId === this.currentFilter);
+        });
+    }
+
+    renderTagFilters() {
+        const tags = this.tagManager.getAllTags();
+        let html = '<button class="tag-filter active" data-tag-id="all">Todas</button>';
+        
+        // Obtener solo las etiquetas que están en uso
+        const usedTagIds = new Set(this.taskManager.tasks.map(task => task.tagId).filter(Boolean));
+        
+        tags.forEach(tag => {
+            if (usedTagIds.has(tag.id)) {
+                html += `
+                    <button class="tag-filter" 
+                            data-tag-id="${tag.id}" 
+                            style="background-color: ${tag.color}">
+                        ${tag.name}
+                    </button>`;
+            }
+        });
+        
+        this.tagFilters.innerHTML = html;
+        this.updateActiveFilter();
+    }
+
+    updateTagSelect() {
+        const tags = this.tagManager.getAllTags();
+        let html = '<option value="">Sin etiqueta</option>';
+        
+        tags.forEach(tag => {
+            html += `<option value="${tag.id}">${tag.name}</option>`;
+        });
+        
+        this.tagSelect.innerHTML = html;
     }
 
     showDeleteModal(id) {
@@ -58,6 +166,7 @@ class UIManager {
         if (this.taskToDelete) {
             this.taskManager.deleteTask(this.taskToDelete);
             this.renderTasks();
+            this.renderTagFilters(); // Actualizar filtros
             this.hideDeleteModal();
             this.showNotification('Tarea eliminada', 'info');
         }
@@ -65,7 +174,8 @@ class UIManager {
 
     startEditing(id) {
         const li = this.todoList.querySelector(`li[data-id="${id}"]`);
-        const span = li.querySelector('span');
+        const taskContent = li.querySelector('.task-content');
+        const span = taskContent.querySelector('span');
         const text = span.textContent;
 
         const input = document.createElement('input');
@@ -103,7 +213,11 @@ class UIManager {
 
     renderTasks() {
         this.todoList.innerHTML = '';
-        this.taskManager.tasks.forEach((task, index) => {
+        const tasks = this.currentFilter === 'all' 
+            ? this.taskManager.tasks 
+            : this.taskManager.getTasksByTag(this.currentFilter);
+
+        tasks.forEach((task, index) => {
             const li = this.createTaskElement(task, index);
             this.todoList.appendChild(li);
         });
@@ -130,15 +244,34 @@ class UIManager {
         const taskContent = document.createElement('div');
         taskContent.className = 'task-content';
 
+        // Contenedor principal de la tarea (texto y etiqueta)
+        const taskMain = document.createElement('div');
+        taskMain.className = 'task-main';
+
         const span = document.createElement('span');
         span.textContent = task.text;
         span.addEventListener('dblclick', () => this.startEditing(task.id));
 
+        taskMain.appendChild(span);
+
+        // Etiqueta de la tarea
+        if (task.tagId) {
+            const tag = this.tagManager.getTag(task.tagId);
+            if (tag) {
+                const tagSpan = document.createElement('span');
+                tagSpan.className = 'task-tag';
+                tagSpan.textContent = tag.name;
+                tagSpan.style.backgroundColor = tag.color;
+                taskMain.appendChild(tagSpan);
+            }
+        }
+
+        // Tiempo
         const timeSpan = document.createElement('span');
         timeSpan.className = 'task-time';
         timeSpan.textContent = this.getRelativeTime(task.createdAt);
 
-        taskContent.appendChild(span);
+        taskContent.appendChild(taskMain);
         taskContent.appendChild(timeSpan);
         
         // Botones de acción
@@ -169,6 +302,7 @@ class UIManager {
         const newStatus = this.taskManager.toggleTask(id);
         if (newStatus !== null) {
             this.renderTasks();
+            this.renderTagFilters(); // Actualizar filtros
             this.showNotification(
                 newStatus ? '✅ Tarea completada' : '↩️ Tarea marcada como pendiente',
                 'success'
