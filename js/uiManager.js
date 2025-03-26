@@ -8,6 +8,7 @@ class UIManager {
         this.initializeEventListeners();
         this.renderTagFilters();
         this.updateTagSelect();
+        this.updateTaskStats();
     }
 
     initializeElements() {
@@ -30,6 +31,10 @@ class UIManager {
         this.deleteModal = document.getElementById('deleteModal');
         this.confirmDelete = document.getElementById('confirmDelete');
         this.cancelDelete = document.getElementById('cancelDelete');
+        this.clearAllButton = document.getElementById('clearAllButton');
+        this.clearAllModal = document.getElementById('clearAllModal');
+        this.confirmClearAll = document.getElementById('confirmClearAll');
+        this.cancelClearAll = document.getElementById('cancelClearAll');
         this.taskToDelete = null;
     }
 
@@ -61,6 +66,14 @@ class UIManager {
         this.deleteModal.addEventListener('click', (e) => {
             if (e.target === this.deleteModal) this.hideDeleteModal();
         });
+
+        // Eventos de limpiar todo
+        this.clearAllButton.addEventListener('click', () => this.showClearAllModal());
+        this.confirmClearAll.addEventListener('click', () => this.handleClearAll());
+        this.cancelClearAll.addEventListener('click', () => this.hideClearAllModal());
+        this.clearAllModal.addEventListener('click', (e) => {
+            if (e.target === this.clearAllModal) this.hideClearAllModal();
+        });
     }
 
     handleAddTask() {
@@ -71,6 +84,7 @@ class UIManager {
             this.taskInput.value = '';
             this.renderTasks();
             this.renderTagFilters(); // Actualizar filtros al agregar tarea
+            this.updateTaskStats();
             this.showNotification('Tarea agregada exitosamente', 'success');
         } else {
             this.showNotification('Por favor ingresa una tarea válida', 'error');
@@ -167,6 +181,7 @@ class UIManager {
             this.taskManager.deleteTask(this.taskToDelete);
             this.renderTasks();
             this.renderTagFilters(); // Actualizar filtros
+            this.updateTaskStats();
             this.hideDeleteModal();
             this.showNotification('Tarea eliminada', 'info');
         }
@@ -216,12 +231,21 @@ class UIManager {
         const tasks = this.currentFilter === 'all' 
             ? this.taskManager.tasks 
             : this.taskManager.getTasksByTag(this.currentFilter);
+        
+        if (tasks.length === 0) {
+            const emptyMessage = document.createElement('li');
+            emptyMessage.className = 'empty-message';
+            emptyMessage.textContent = this.currentFilter === 'all' 
+                ? 'No hay tareas pendientes' 
+                : 'No hay tareas con esta etiqueta';
+            this.todoList.appendChild(emptyMessage);
+        } else {
+            tasks.forEach((task, index) => {
+                this.todoList.appendChild(this.createTaskElement(task, index));
+            });
+        }
 
-        tasks.forEach((task, index) => {
-            const li = this.createTaskElement(task, index);
-            this.todoList.appendChild(li);
-        });
-        this.updateProgress();
+        this.updateTaskStats();
     }
 
     createTaskElement(task, index) {
@@ -303,6 +327,7 @@ class UIManager {
         if (newStatus !== null) {
             this.renderTasks();
             this.renderTagFilters(); // Actualizar filtros
+            this.updateTaskStats();
             this.showNotification(
                 newStatus ? '✅ Tarea completada' : '↩️ Tarea marcada como pendiente',
                 'success'
@@ -310,20 +335,23 @@ class UIManager {
         }
     }
 
-    updateProgress() {
-        const progress = this.taskManager.getProgress();
-        
-        this.progressBar.style.width = `${progress.percentage}%`;
-        this.progressText.textContent = `${progress.percentage}% completado`;
-        
-        this.taskCount.textContent = `${progress.total} ${progress.total === 1 ? 'tarea total' : 'tareas totales'}`;
-        this.pendingCount.textContent = `${progress.pending} ${progress.pending === 1 ? 'pendiente' : 'pendientes'}`;
+    updateTaskStats() {
+        const total = this.taskManager.tasks.length;
+        const completed = this.taskManager.tasks.filter(task => task.completed).length;
+        const pending = total - completed;
+        const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
 
-        if (progress.percentage === 100 && progress.pending === 0 && progress.completed > 0 && 
-            !this.updateProgress.wasComplete) {
-            this.showNotification('¡Todas las tareas han sido completadas!', 'success');
-        }
-        this.updateProgress.wasComplete = (progress.percentage === 100 && progress.completed > 0);
+        // Actualizar progress bar
+        this.progressBar.style.width = `${progress}%`;
+        this.progressBar.style.transition = 'width 0.3s ease';
+
+        // Actualizar textos
+        this.progressText.textContent = `${progress}% completado`;
+        this.taskCount.textContent = `${total} ${total === 1 ? 'tarea' : 'tareas'} totales`;
+        this.pendingCount.textContent = `${pending} ${pending === 1 ? 'pendiente' : 'pendientes'}`;
+
+        // Mostrar/ocultar botón de limpiar todo
+        this.clearAllButton.style.display = total >= 2 ? 'flex' : 'none';
     }
 
     showNotification(message, type = 'info') {
@@ -510,5 +538,22 @@ class UIManager {
         this.touchStartY = null;
         this.currentTouchY = null;
         e.preventDefault();
+    }
+
+    showClearAllModal() {
+        this.clearAllModal.classList.add('show');
+    }
+
+    hideClearAllModal() {
+        this.clearAllModal.classList.remove('show');
+    }
+
+    handleClearAll() {
+        this.taskManager.clearAllTasks();
+        this.renderTasks();
+        this.renderTagFilters();
+        this.updateTaskStats();
+        this.hideClearAllModal();
+        this.showNotification('Se han eliminado todas las tareas', 'info');
     }
 }

@@ -31,6 +31,18 @@
             </div>
         </div>
 
+        <!-- Modal para confirmar limpiar todo -->
+        <div id="clearAllModal" class="modal">
+            <div class="modal-content">
+                <h2>¿Eliminar todas las tareas?</h2>
+                <p>Esta acción no se puede deshacer.</p>
+                <div class="modal-buttons">
+                    <button id="confirmClearAll" class="modal-button delete-modal-btn">Eliminar todo</button>
+                    <button id="cancelClearAll" class="modal-button cancel-modal-btn">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
         <div class="header">
             <h1>Mi Lista de Tareas</h1>
             <div class="header-buttons">
@@ -43,11 +55,14 @@
                 <div class="progress-bar" id="progress"></div>
             </div>
             <div class="progress-stats">
-                <span class="progress-text" id="progressText">0% completado</span>
-                <div class="task-summary">
-                    <span id="taskCount">0 tareas totales</span>
-                    <span id="pendingCount">0 pendientes</span>
+                <div class="stats-left">
+                    <span class="progress-text" id="progressText">0% completado</span>
+                    <div class="task-summary">
+                        <span id="taskCount">0 tareas totales</span>
+                        <span id="pendingCount">0 pendientes</span>
+                    </div>
                 </div>
+                <button id="clearAllButton" class="clear-all-button" style="display: none">🗑️ Limpiar todo</button>
             </div>
         </div>
         <div class="tag-filters" id="tagFilters">

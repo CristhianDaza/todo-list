@@ -78,4 +78,9 @@ class TaskManager {
     getTasksByTag(tagId) {
         return tagId ? this.tasks.filter(task => task.tagId === tagId) : this.tasks;
     }
+
+    clearAllTasks() {
+        this.tasks = [];
+        this.saveTasks();
+    }
 }
