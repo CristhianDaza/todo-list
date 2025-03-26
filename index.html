@@ -66,14 +66,17 @@
             </div>
         </div>
         <div class="todo-input">
-            <input type="text" id="taskInput" placeholder="Agregar nueva tarea">
-            <div class="task-options">
-                <select id="tagSelect">
-                    <option value="">Sin etiqueta</option>
-                </select>
-                <input type="datetime-local" id="dueDateInput" class="date-input">
-                <button id="addTask">+</button>
-            </div>
+            <input type="text" id="taskInput" placeholder="Agregar una tarea...">
+            <select id="prioritySelect" class="priority-select" aria-label="Prioridad de la tarea">
+                <option value="baja">🔵 Baja</option>
+                <option value="media" selected>🟡 Media</option>
+                <option value="alta">🔴 Alta</option>
+            </select>
+            <select id="tagSelect" class="tag-select">
+                <option value="">Sin etiqueta</option>
+            </select>
+            <input type="datetime-local" id="dueDateInput" class="due-date-input">
+            <button id="addTask">Agregar</button>
         </div>
 
         <div class="controls-container">

@@ -11,6 +11,7 @@
     --error-color: #dc3545;
     --warning-color: #ffc107;
     --shadow-color: rgba(0, 0, 0, 0.1);
+    --info-color: #2196F3;
 }
 
 [data-theme="dark"] {
@@ -181,35 +182,86 @@ h1 {
 
 .todo-input {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 20px;
-    width: 100%;
+    gap: 8px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
 }
 
 .todo-input input[type="text"] {
-    padding: 12px;
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 12px;
     border: 1px solid var(--border-color);
-    border-radius: 20px;
-    font-size: 1rem;
-    background: var(--secondary-bg);
+    border-radius: 6px;
+    background-color: var(--secondary-bg);
     color: var(--text-color);
-    width: 100%;
+    font-size: 0.9rem;
+}
+
+.todo-input select,
+.todo-input input[type="datetime-local"] {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.priority-select {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    min-width: 120px;
+}
+
+.task-priority {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.6rem;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-right: 4px;
+    height: 16px;
+    opacity: 0.9;
+}
+
+.task-priority.alta {
+    background-color: var(--error-color);
+    color: white;
+}
+
+.task-priority.media {
+    background-color: var(--warning-color);
+    color: #000;
+}
+
+.task-priority.baja {
+    background-color: var(--info-color);
+    color: white;
+}
+
+.todo-input button {
+    padding: 8px 16px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.todo-input button:hover {
+    background-color: var(--accent-hover);
 }
 
 .task-options {
     display: flex;
     gap: 8px;
-    width: 100%;
-}
-
-#tagSelect {
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    font-size: 1rem;
-    background: var(--secondary-bg);
-    color: var(--text-color);
     flex: 1;
 }
 
@@ -223,34 +275,50 @@ h1 {
     flex: 1;
 }
 
-#addTask {
-    padding: 8px 20px;
-    border: none;
-    border-radius: 20px;
-    background: var(--accent-color);
-    color: white;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-#addTask:hover {
-    background-color: var(--accent-hover);
-}
-
-.controls-container {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
-}
-
 .view-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin: 1rem 0;
     gap: 16px;
-    margin-bottom: 16px;
+}
+
+.view-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.view-button {
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background: var(--secondary-bg);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.view-button.active {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.sort-select {
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background: var(--secondary-bg);
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.view {
+    display: none;
+}
+
+.view.active {
+    display: block;
 }
 
 .todo-list {
@@ -362,9 +430,7 @@ h1 {
 
 .actions {
     display: flex;
-    gap: 12px;
-    margin-left: auto;
-    flex-shrink: 0;
+    gap: 8px;
 }
 
 .delete-btn, .edit-btn {

@@ -1,8 +1,10 @@
 // Gestión de tareas
 class TaskManager {
     constructor() {
-        this.tasks = [];
+        this.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        this.subscribers = [];
         this.loadTasks();
+        this.sortTasks();
         this.setupNotificationCheck();
     }
 
@@ -22,7 +24,7 @@ class TaskManager {
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
     }
 
-    addTask(text, tagId = null, dueDate = null) {
+    addTask(text, tagId = null, dueDate = null, priority = 'media') {
         const task = {
             id: Date.now().toString(),
             text,
@@ -30,15 +32,18 @@ class TaskManager {
             createdAt: new Date(),
             tagId,
             dueDate: dueDate ? new Date(dueDate) : null,
-            notified: false
+            notified: false,
+            priority
         };
         this.tasks.push(task);
+        this.sortTasks();
         this.saveTasks();
         return task;
     }
 
     deleteTask(id) {
         this.tasks = this.tasks.filter(task => task.id !== id);
+        this.sortTasks();
         this.saveTasks();
     }
 
@@ -46,6 +51,7 @@ class TaskManager {
         const task = this.tasks.find(task => task.id === id);
         if (task) {
             task.completed = !task.completed;
+            this.sortTasks();
             this.saveTasks();
             return task.completed;
         }
@@ -53,13 +59,14 @@ class TaskManager {
     }
 
     updateTask(id, updates) {
-        const task = this.tasks.find(task => task.id === id);
+        const task = this.tasks.find(t => t.id === id);
         if (task) {
             Object.assign(task, updates);
             if (updates.dueDate) {
                 task.dueDate = new Date(updates.dueDate);
                 task.notified = false;
             }
+            this.sortTasks();
             this.saveTasks();
             return task;
         }
@@ -70,6 +77,7 @@ class TaskManager {
         const task = this.tasks.find(t => t.id === id);
         if (task) {
             task.tagId = tagId;
+            this.sortTasks();
             this.saveTasks();
             return true;
         }
@@ -159,8 +167,45 @@ class TaskManager {
         }
     }
 
+    sortTasks() {
+        const priorityValues = {
+            'alta': 3,
+            'media': 2,
+            'baja': 1
+        };
+
+        this.tasks.sort((a, b) => {
+            // Primero por completado
+            if (a.completed !== b.completed) {
+                return a.completed ? 1 : -1;
+            }
+            
+            // Luego por prioridad
+            const priorityDiff = priorityValues[b.priority] - priorityValues[a.priority];
+            if (priorityDiff !== 0) return priorityDiff;
+            
+            // Luego por fecha límite
+            if (a.dueDate && b.dueDate) {
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            }
+            if (a.dueDate) return -1;
+            if (b.dueDate) return 1;
+            
+            // Finalmente por fecha de creación
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        
+        this.notifySubscribers();
+    }
+
+    notifySubscribers() {
+        // Notificar a los subscriptores de cambios en la lista de tareas
+        this.subscribers.forEach(subscriber => subscriber(this.tasks));
+    }
+
     clearAllTasks() {
         this.tasks = [];
+        this.sortTasks();
         this.saveTasks();
     }
 }

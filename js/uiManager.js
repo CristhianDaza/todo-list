@@ -16,6 +16,7 @@ class UIManager {
         this.todoList = document.getElementById('todoList');
         this.taskInput = document.getElementById('taskInput');
         this.tagSelect = document.getElementById('tagSelect');
+        this.prioritySelect = document.getElementById('prioritySelect');
         this.addTaskButton = document.getElementById('addTask');
         this.progressBar = document.getElementById('progress');
         this.progressText = document.getElementById('progressText');
@@ -100,11 +101,15 @@ class UIManager {
         if (text) {
             const tagId = this.tagSelect.value;
             const dueDate = this.dueDateInput.value ? new Date(this.dueDateInput.value) : null;
-
-            this.taskManager.addTask(text, tagId, dueDate);
-
+            const priority = this.prioritySelect.value;
+            
+            this.taskManager.addTask(text, tagId, dueDate, priority);
+            
             this.taskInput.value = '';
+            this.tagSelect.value = '';
             this.dueDateInput.value = '';
+            this.prioritySelect.value = 'media';
+            this.taskInput.focus();
             this.renderTasks();
             this.renderTagFilters();
             this.calendarManager.render();
@@ -212,41 +217,109 @@ class UIManager {
 
     startEditing(id) {
         const li = this.todoList.querySelector(`li[data-id="${id}"]`);
+        if (!li) return;
+
         const taskContent = li.querySelector('.task-content');
-        const span = taskContent.querySelector('span');
+        const taskMain = taskContent.querySelector('.task-main');
+        const span = taskMain.querySelector('span');
         const text = span.textContent;
 
+        // Crear contenedor de edición
+        const editContainer = document.createElement('div');
+        editContainer.className = 'edit-container';
+        editContainer.style.display = 'flex';
+        editContainer.style.gap = '8px';
+        editContainer.style.width = '100%';
+        editContainer.style.marginBottom = '8px';
+
+        // Input para el texto
         const input = document.createElement('input');
         input.type = 'text';
         input.value = text;
         input.className = 'edit-input';
-        input.style.width = '100%';
+        input.style.flex = '1';
         input.style.padding = '8px';
-        input.style.border = '2px solid #4a2fbd';
+        input.style.border = '1px solid var(--border-color)';
         input.style.borderRadius = '4px';
-        input.style.outline = 'none';
+        input.style.backgroundColor = 'var(--secondary-bg)';
+        input.style.color = 'var(--text-color)';
 
-        const saveEdit = () => {
-            const newText = input.value.trim();
-            if (this.taskManager.updateTask(id, newText)) {
-                this.renderTasks();
-                this.showNotification('Tarea actualizada', 'success');
-            } else if (!newText) {
-                this.showNotification('El texto de la tarea no puede estar vacío', 'error');
-                this.renderTasks();
-            } else {
-                this.renderTasks();
-            }
-        };
+        // Select para la prioridad
+        const prioritySelect = document.createElement('select');
+        prioritySelect.className = 'priority-select';
+        prioritySelect.innerHTML = `
+            <option value="baja">🔵 Baja</option>
+            <option value="media">🟡 Media</option>
+            <option value="alta">🔴 Alta</option>
+        `;
+        const task = this.taskManager.tasks.find(t => t.id === id);
+        prioritySelect.value = task.priority || 'media';
 
-        input.addEventListener('blur', saveEdit);
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') saveEdit();
-        });
+        // Botones
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.style.display = 'flex';
+        buttonsContainer.style.gap = '4px';
 
-        span.replaceWith(input);
+        const saveButton = document.createElement('button');
+        saveButton.textContent = '✓';
+        saveButton.className = 'edit-btn save-btn';
+        saveButton.style.backgroundColor = 'var(--success-color)';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = '×';
+        cancelButton.className = 'edit-btn cancel-btn';
+        cancelButton.style.backgroundColor = 'var(--error-color)';
+
+        buttonsContainer.appendChild(saveButton);
+        buttonsContainer.appendChild(cancelButton);
+
+        // Agregar elementos al contenedor
+        editContainer.appendChild(input);
+        editContainer.appendChild(prioritySelect);
+        editContainer.appendChild(buttonsContainer);
+
+        // Reemplazar el contenido original
+        const originalContent = taskMain.innerHTML;
+        taskMain.innerHTML = '';
+        taskMain.appendChild(editContainer);
+
+        // Focus en el input
         input.focus();
         input.select();
+
+        const handleSave = () => {
+            const newText = input.value.trim();
+            if (newText) {
+                this.taskManager.updateTask(id, {
+                    text: newText,
+                    priority: prioritySelect.value
+                });
+                this.showNotification('Tarea actualizada', 'success');
+            } else {
+                this.showNotification('El texto de la tarea no puede estar vacío', 'error');
+            }
+            this.renderTasks();
+        };
+
+        const handleCancel = () => {
+            taskMain.innerHTML = originalContent;
+        };
+
+        // Event listeners
+        saveButton.addEventListener('click', handleSave);
+        cancelButton.addEventListener('click', handleCancel);
+        
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSave();
+            }
+        });
+
+        input.addEventListener('keyup', (e) => {
+            if (e.key === 'Escape') {
+                handleCancel();
+            }
+        });
     }
 
     renderTasks(tasks = this.taskManager.tasks) {
@@ -269,7 +342,7 @@ class UIManager {
 
     createTaskElement(task, index) {
         const li = document.createElement('li');
-        li.dataset.index = index;
+        li.dataset.id = task.id;
         li.draggable = true;
         if (task.completed) li.classList.add('completed');
 
@@ -292,6 +365,17 @@ class UIManager {
 
         const metadata = document.createElement('div');
         metadata.className = 'task-metadata';
+
+        // Prioridad
+        const prioritySpan = document.createElement('span');
+        prioritySpan.className = `task-priority ${task.priority || 'media'}`;
+        const priorityIcons = {
+            'alta': '🔴',
+            'media': '🟡',
+            'baja': '🔵'
+        };
+        prioritySpan.textContent = priorityIcons[task.priority || 'media'];
+        metadata.appendChild(prioritySpan);
 
         // Etiqueta de la tarea
         if (task.tagId) {
