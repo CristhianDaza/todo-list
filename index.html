@@ -15,6 +15,21 @@
 </head>
 <body>
     <div class="container">
+        <!-- Notificaciones -->
+        <div id="notifications" class="notifications"></div>
+
+        <!-- Modal de confirmación -->
+        <div id="deleteModal" class="modal">
+            <div class="modal-content">
+                <h2>¿Eliminar tarea?</h2>
+                <p>¿Estás seguro de que deseas eliminar esta tarea?</p>
+                <div class="modal-buttons">
+                    <button id="confirmDelete" class="modal-button delete-btn">Confirmar</button>
+                    <button id="cancelDelete" class="modal-button cancel-btn">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
         <div class="header">
             <h1>Mi Lista de Tareas</h1>
             <div class="header-buttons">

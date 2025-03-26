@@ -84,6 +84,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Sistema de notificaciones
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+
+        const notifications = document.getElementById('notifications');
+        notifications.appendChild(notification);
+
+        // Auto-eliminar después de 3 segundos
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Modal de confirmación
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDelete = document.getElementById('confirmDelete');
+    const cancelDelete = document.getElementById('cancelDelete');
+    let taskToDelete = null;
+
+    function showDeleteModal(taskId) {
+        taskToDelete = taskId;
+        deleteModal.classList.add('show');
+    }
+
+    function hideDeleteModal() {
+        deleteModal.classList.remove('show');
+        taskToDelete = null;
+    }
+
+    confirmDelete.addEventListener('click', () => {
+        if (taskToDelete) {
+            deleteTask(taskToDelete);
+            hideDeleteModal();
+        }
+    });
+
+    cancelDelete.addEventListener('click', hideDeleteModal);
+
     function addTask() {
         const taskText = taskInput.value.trim();
         if (taskText) {
@@ -97,6 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
             saveTasks();
             renderTasks();
             taskInput.value = '';
+            showNotification('Tarea agregada exitosamente', 'success');
+        } else {
+            showNotification('Por favor ingresa una tarea válida', 'error');
         }
     }
 
@@ -189,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const deleteButton = document.createElement('button');
             deleteButton.textContent = '×';
             deleteButton.className = 'delete-btn';
-            deleteButton.addEventListener('click', () => deleteTask(task.id));
+            deleteButton.addEventListener('click', () => showDeleteModal(task.id));
             
             actions.appendChild(editButton);
             actions.appendChild(deleteButton);
@@ -225,8 +270,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     t.id === id ? {...t, text: newText} : t
                 );
                 saveTasks();
+                renderTasks();
+                showNotification('Tarea actualizada', 'success');
+            } else if (!newText) {
+                showNotification('El texto de la tarea no puede estar vacío', 'error');
+                renderTasks();
+            } else {
+                renderTasks();
             }
-            renderTasks();
         };
 
         input.addEventListener('blur', saveEdit);
@@ -253,6 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tasks = tasks.filter(task => task.id !== id);
         saveTasks();
         renderTasks();
+        showNotification('Tarea eliminada', 'info');
     }
 
     // Variables para el drag and drop
