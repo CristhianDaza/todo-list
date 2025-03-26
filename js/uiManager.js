@@ -44,6 +44,23 @@ class UIManager {
         this.listView = document.getElementById('listView');
         this.calendarView = document.getElementById('calendarView');
         this.sortSelect = document.getElementById('sortSelect');
+        this.searchInput = document.getElementById('searchInput');
+        this.advancedFilterBtn = document.getElementById('advancedFilterBtn');
+        this.advancedFilters = document.getElementById('advancedFilters');
+        this.statusFilter = document.getElementById('statusFilter');
+        this.priorityFilter = document.getElementById('priorityFilter');
+        this.dateFilter = document.getElementById('dateFilter');
+        this.historyList = document.getElementById('historyList');
+        this.historyViewBtn = document.getElementById('historyViewBtn');
+        
+        // Inicializar filtros
+        this.activeFilters = {
+            search: '',
+            status: 'all',
+            priority: 'all',
+            date: 'all',
+            tag: 'all'
+        };
     }
 
     initializeEventListeners() {
@@ -94,6 +111,39 @@ class UIManager {
         if ('Notification' in window) {
             Notification.requestPermission();
         }
+
+        // Búsqueda en tiempo real
+        this.searchInput.addEventListener('input', () => {
+            this.activeFilters.search = this.searchInput.value.toLowerCase();
+            this.applyFilters();
+        });
+
+        // Mostrar/ocultar filtros avanzados
+        this.advancedFilterBtn.addEventListener('click', () => {
+            this.advancedFilters.classList.toggle('show');
+            this.advancedFilterBtn.classList.toggle('active');
+        });
+
+        // Eventos de filtros
+        this.statusFilter.addEventListener('change', () => {
+            this.activeFilters.status = this.statusFilter.value;
+            this.applyFilters();
+        });
+
+        this.priorityFilter.addEventListener('change', () => {
+            this.activeFilters.priority = this.priorityFilter.value;
+            this.applyFilters();
+        });
+
+        this.dateFilter.addEventListener('change', () => {
+            this.activeFilters.date = this.dateFilter.value;
+            this.applyFilters();
+        });
+
+        // Vista de historial
+        this.historyViewBtn.addEventListener('click', () => {
+            this.switchView('history');
+        });
     }
 
     handleAddTask() {
@@ -437,16 +487,16 @@ class UIManager {
     }
 
     handleToggleTask(id) {
-        const newStatus = this.taskManager.toggleTask(id);
-        if (newStatus !== null) {
-            this.renderTasks();
-            this.renderTagFilters(); // Actualizar filtros
-            this.updateTaskStats();
-            this.showNotification(
-                newStatus ? '✅ Tarea completada' : '↩️ Tarea marcada como pendiente',
-                'success'
-            );
+        const wasCompleted = this.taskManager.toggleTask(id);
+        if (wasCompleted) {
+            this.showNotification('Tarea completada', 'success');
+            // Actualizar historial si está visible
+            if (document.getElementById('historyView').classList.contains('active')) {
+                this.updateHistory();
+            }
         }
+        this.applyFilters();
+        this.updateTaskStats();
     }
 
     updateTaskStats() {
@@ -654,17 +704,14 @@ class UIManager {
     }
 
     switchView(view) {
-        if (view === 'list') {
-            this.listView.classList.add('active');
-            this.calendarView.classList.remove('active');
-            this.listViewBtn.classList.add('active');
-            this.calendarViewBtn.classList.remove('active');
-        } else {
-            this.listView.classList.remove('active');
-            this.calendarView.classList.add('active');
-            this.listViewBtn.classList.remove('active');
-            this.calendarViewBtn.classList.add('active');
-            this.calendarManager.render();
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.view-button').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(`${view}View`).classList.add('active');
+        document.getElementById(`${view}ViewBtn`).classList.add('active');
+        
+        if (view === 'history') {
+            this.updateHistory();
         }
     }
 
@@ -723,5 +770,78 @@ class UIManager {
         return date1.getFullYear() === date2.getFullYear() &&
             date1.getMonth() === date2.getMonth() &&
             date1.getDate() === date2.getDate();
+    }
+
+    applyFilters() {
+        const filteredTasks = this.taskManager.tasks.filter(task => {
+            // Búsqueda por texto
+            if (this.activeFilters.search && 
+                !task.text.toLowerCase().includes(this.activeFilters.search)) {
+                return false;
+            }
+
+            // Filtro por estado
+            if (this.activeFilters.status === 'pending' && task.completed) return false;
+            if (this.activeFilters.status === 'completed' && !task.completed) return false;
+
+            // Filtro por prioridad
+            if (this.activeFilters.priority !== 'all' && 
+                task.priority !== this.activeFilters.priority) {
+                return false;
+            }
+
+            // Filtro por fecha
+            if (this.activeFilters.date !== 'all' && task.dueDate) {
+                const today = new Date();
+                const dueDate = new Date(task.dueDate);
+                
+                switch (this.activeFilters.date) {
+                    case 'today':
+                        if (!this.isSameDay(dueDate, today)) return false;
+                        break;
+                    case 'week':
+                        const weekEnd = new Date(today);
+                        weekEnd.setDate(today.getDate() + 7);
+                        if (dueDate < today || dueDate > weekEnd) return false;
+                        break;
+                    case 'month':
+                        if (dueDate.getMonth() !== today.getMonth() ||
+                            dueDate.getFullYear() !== today.getFullYear()) return false;
+                        break;
+                    case 'overdue':
+                        if (dueDate >= today || task.completed) return false;
+                        break;
+                }
+            }
+
+            // Filtro por etiqueta
+            if (this.activeFilters.tag !== 'all' && task.tagId !== this.activeFilters.tag) {
+                return false;
+            }
+
+            return true;
+        });
+
+        this.renderTasks(filteredTasks);
+    }
+
+    updateHistory() {
+        const completedTasks = this.taskManager.tasks
+            .filter(task => task.completed)
+            .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+
+        this.historyList.innerHTML = '';
+        
+        completedTasks.forEach(task => {
+            const li = document.createElement('li');
+            const taskEl = this.createTaskElement(task);
+            const completionDate = document.createElement('span');
+            completionDate.className = 'completion-date';
+            completionDate.textContent = this.formatDate(task.completedAt);
+            
+            li.appendChild(taskEl);
+            li.appendChild(completionDate);
+            this.historyList.appendChild(li);
+        });
     }
 }

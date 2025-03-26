@@ -1136,3 +1136,134 @@ h1 {
         font-size: 0.8rem;
     }
 }
+
+.search-section {
+    margin-bottom: 1rem;
+}
+
+.search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.filter-btn {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    background-color: var(--hover-bg);
+}
+
+.filter-btn.active {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.advanced-filters {
+    display: none;
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 8px;
+    gap: 16px;
+}
+
+.advanced-filters.show {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-group label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.filter-group select {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.history-container {
+    background: var(--secondary-bg);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.history-container h3 {
+    color: var(--text-color);
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+}
+
+.history-list li {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    opacity: 0.8;
+}
+
+.history-list li:last-child {
+    border-bottom: none;
+}
+
+.history-list .task-content {
+    opacity: 0.8;
+}
+
+.history-list .task-metadata {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.history-list .completion-date {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .advanced-filters {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-group {
+        margin-bottom: 8px;
+    }
+}

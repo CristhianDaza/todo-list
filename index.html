@@ -80,10 +80,55 @@
         </div>
 
         <div class="controls-container">
+            <div class="search-section">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Buscar tareas..." class="search-input">
+                    <button id="advancedFilterBtn" class="filter-btn" aria-label="Filtros avanzados">
+                        <span class="filter-icon">⚡</span>
+                    </button>
+                </div>
+                <div id="advancedFilters" class="advanced-filters">
+                    <div class="filter-group">
+                        <label>Estado</label>
+                        <select id="statusFilter">
+                            <option value="all">Todos</option>
+                            <option value="pending">Pendientes</option>
+                            <option value="completed">Completadas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Prioridad</label>
+                        <select id="priorityFilter">
+                            <option value="all">Todas</option>
+                            <option value="alta">🔴 Alta</option>
+                            <option value="media">🟡 Media</option>
+                            <option value="baja">🔵 Baja</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Fecha</label>
+                        <select id="dateFilter">
+                            <option value="all">Todas</option>
+                            <option value="today">Hoy</option>
+                            <option value="week">Esta semana</option>
+                            <option value="month">Este mes</option>
+                            <option value="overdue">Vencidas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Etiquetas</label>
+                        <div id="tagFilters" class="tag-filters">
+                            <!-- Tags will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="view-controls">
                 <div class="view-buttons">
                     <button id="listViewBtn" class="view-button active">📝 Lista</button>
                     <button id="calendarViewBtn" class="view-button">📅 Calendario</button>
+                    <button id="historyViewBtn" class="view-button">Historial</button>
                 </div>
                 <div class="sort-options">
                     <select id="sortSelect" class="sort-select">
@@ -92,37 +137,44 @@
                     </select>
                 </div>
             </div>
+        </div>
 
-            <div id="listView" class="view active">
-                <div class="tag-filters" id="tagFilters">
-                    <button class="tag-filter active" data-tag-id="all">Todas</button>
-                    <!-- Las etiquetas se agregarán aquí -->
-                </div>
-                <ul class="todo-list" id="todoList">
-                    <!-- Las tareas se agregarán aquí -->
-                </ul>
+        <div id="listView" class="view active">
+            <div class="tag-filters" id="tagFilters">
+                <button class="tag-filter active" data-tag-id="all">Todas</button>
+                <!-- Las etiquetas se agregarán aquí -->
             </div>
+            <ul class="todo-list" id="todoList">
+                <!-- Las tareas se agregarán aquí -->
+            </ul>
+        </div>
 
-            <div id="calendarView" class="view">
-                <div class="calendar-header">
-                    <button id="prevMonth">◀</button>
-                    <h2 id="currentMonth">Marzo 2025</h2>
-                    <button id="nextMonth">▶</button>
+        <div id="calendarView" class="view">
+            <div class="calendar-header">
+                <button id="prevMonth">◀</button>
+                <h2 id="currentMonth">Marzo 2025</h2>
+                <button id="nextMonth">▶</button>
+            </div>
+            <div class="calendar-grid">
+                <div class="calendar-days">
+                    <span>Dom</span>
+                    <span>Lun</span>
+                    <span>Mar</span>
+                    <span>Mié</span>
+                    <span>Jue</span>
+                    <span>Vie</span>
+                    <span>Sáb</span>
                 </div>
-                <div class="calendar-grid">
-                    <div class="calendar-days">
-                        <span>Dom</span>
-                        <span>Lun</span>
-                        <span>Mar</span>
-                        <span>Mié</span>
-                        <span>Jue</span>
-                        <span>Vie</span>
-                        <span>Sáb</span>
-                    </div>
-                    <div id="calendarDays" class="calendar-dates">
-                        <!-- Los días se agregarán aquí -->
-                    </div>
+                <div id="calendarDays" class="calendar-dates">
+                    <!-- Los días se agregarán aquí -->
                 </div>
+            </div>
+        </div>
+
+        <div id="historyView" class="view">
+            <div class="history-container">
+                <h3>Historial de Tareas Completadas</h3>
+                <ul id="historyList" class="history-list"></ul>
             </div>
         </div>
 

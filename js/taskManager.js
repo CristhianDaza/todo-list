@@ -17,6 +17,9 @@ class TaskManager {
             if (task.dueDate) {
                 task.dueDate = new Date(task.dueDate);
             }
+            if (task.completedAt) {
+                task.completedAt = new Date(task.completedAt);
+            }
         });
     }
 
@@ -33,7 +36,8 @@ class TaskManager {
             tagId,
             dueDate: dueDate ? new Date(dueDate) : null,
             notified: false,
-            priority
+            priority,
+            completedAt: null
         };
         this.tasks.push(task);
         this.sortTasks();
@@ -51,6 +55,11 @@ class TaskManager {
         const task = this.tasks.find(task => task.id === id);
         if (task) {
             task.completed = !task.completed;
+            if (task.completed) {
+                task.completedAt = new Date();
+            } else {
+                task.completedAt = null;
+            }
             this.sortTasks();
             this.saveTasks();
             return task.completed;
