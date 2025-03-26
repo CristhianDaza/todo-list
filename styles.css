@@ -271,12 +271,12 @@ input[type="text"]:focus {
 
 .task-content span {
     display: block;
+    color: var(--text-color);
 }
 
 .task-time {
-    font-size: 0.8rem;
-    color: var(--text-color);
-    opacity: 0.6;
+    font-size: 0.7rem;
+    opacity: 0.6;   
 }
 
 /* Notificaciones */
